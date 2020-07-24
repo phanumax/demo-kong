@@ -30,22 +30,45 @@ services:
   kong:
     depends_on:
       - kong-database
-    image: kong:latest
+    image: kong:2.0.3
     container_name: kong
     restart: always
     environment:
+      - KONG_HEADERS=off
       - KONG_DATABASE=postgres
       - KONG_PG_HOST=kong-database
+      - KONG_PROXY_LISTEN=0.0.0.0:8000, 0.0.0.0:8443 ssl http2
       - KONG_ADMIN_LISTEN=0.0.0.0:8001
-      - KONG_NGINX_HTTP_RESOLVER=8.8.8.8
+      - KONG_NGINX_HTTP_RESOLVER=8.8.8.8 1.1.1.1
       - KONG_PROXY_ERROR_LOG=/dev/stderr
       - KONG_ADMIN_ERROR_LOG=/dev/stderr
       - KONG_TRUSTED_IPS=0.0.0.0/0,::/0
       - KONG_REAL_IP_RECURSIVE=on
+      - KONG_NGINX_PROXY_LUA_SSL_TRUSTED_CERTIFICATE=/etc/ssl/certs/ca-certificates.crt
     ports:
       - 80:8000
-      - 8001:8001
       - 443:8443
+      - 127.0.0.1:8001:8001
+
+  nginx-1:
+    image: nginx:alpine
+    container_name: nginx1
+    restart: always
+    ports:
+      - 127.0.0.1:18001:80
+
+  nginx-2:
+    image: nginx:alpine
+    container_name: nginx2
+    restart: always
+    ports:
+      - 127.0.0.1:18002:80
+
+  httpbin-1:
+    image: kennethreitz/httpbin
+
+  httpbin-2:
+    image: kennethreitz/httpbin
 
   mongo:
     image: mongo
@@ -64,4 +87,4 @@ services:
     depends_on:
       - mongo
     ports:
-      - 1337:1337
+      - 127.0.0.1:1337:1337
